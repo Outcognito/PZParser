@@ -47,7 +47,7 @@ namespace PZParser
                         + "key=trnsl.1.1.20200224T171821Z.806d8be2a2696ae7.3e788f2d4e10b3663b5b786d93813515e08b4a34"
                         + "&text=" + Uri.EscapeDataString(textOnly)
                         + "&lang=" + lang);
-                    Console.WriteLine(Uri.EscapeDataString(textOnly));
+                    
                     WebResponse response = request.GetResponse();
 
                     using (StreamReader stream = new StreamReader(response.GetResponseStream()))
@@ -71,7 +71,7 @@ namespace PZParser
                             else s = resultText;
                         }
                     }
-                    Console.WriteLine(s);
+                    
                     return s;
                     
                 }
