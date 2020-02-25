@@ -168,6 +168,7 @@ namespace PZParser
                 if (translate)
                 {
                     Console.WriteLine("Translating line " + i + "/" + counterTotal);
+                    file.WriteLine("// " + linesGroups.ElementAt(i).Key);
                     file.WriteLine("\ttext = " + Translate(linesGroups.ElementAt(i).Key, startLang + "-" + endLang));
                 }
                 else file.WriteLine("\ttext = " + linesGroups.ElementAt(i).Key);
