@@ -7,16 +7,22 @@ using System.Xml;
 using System.Web;
 using System.Net;
 using Newtonsoft.Json;
+using System.Text.RegularExpressions;
+
 namespace PZParser
 {
     class LineEntry
     {
         public string Line;
         public string ID;
+        public int r;
+        public int g;
+        public int b;
         public LineEntry(string line, string id)
         {
             this.Line = line;
             this.ID = id;
+            
         }
     }
     class Translation
@@ -31,15 +37,15 @@ namespace PZParser
         public static string Translate(string s, string lang)
         {
             string sMem = s;
-            //try
-            //{
+            try
+            {
                 if (s.Length > 0)
                 {
                     string textOnly = "";
                     string resultText = "";
                     if (s.Contains("[img=music]"))
                     {
-                        textOnly = s.Replace("[img=music]", "");
+                        return s;
                     }
                     else textOnly = s;
 
@@ -77,19 +83,19 @@ namespace PZParser
                 }
                 else
                     return "";
-            //}
-            //catch(Exception e)
-            //{
-            //    Console.WriteLine("Line \n" + sMem + "\nCould not be translated");
-            //    return sMem;
-            //}
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("Line \n" + sMem + "\nCould not be translated");
+                return sMem;
+            }
         }
         
         [STAThread]
         static void Main(string[] args)
         {
             string filePath = "";
-            Console.WriteLine("Select radio .XML file\n");
+            Console.WriteLine("Select radio translation file\n");
             while (filePath == "")
             {
                 OpenFileDialog ofd = new OpenFileDialog();
@@ -124,60 +130,89 @@ namespace PZParser
 
                 }
             }
-            string translationAnswer = "";
-            bool translate;
-            while (translationAnswer != "y" && translationAnswer!="n") {
-                Console.WriteLine("Enable automatic translation? (y/n)");
-                translationAnswer = Console.ReadLine();
-            }
-            if (translationAnswer == "y")
-                translate = true;
-            else
-                translate = false;
+
+            
             string startLang = "";
             string endLang = "";
-            if (translate == true) { 
             Console.WriteLine("Original language: (en, ru, ja, es... etc.)");
             startLang = Console.ReadLine();
             Console.WriteLine("Result language: (en, ru, ja, es... etc.)");
             endLang = Console.ReadLine();
-            }
-            XmlDocument xRadio = new XmlDocument();
-            xRadio.Load(filePath);
-            XmlNodeList guidTemp = xRadio.GetElementsByTagName("FileGUID");
-            string guid = guidTemp.Item(0).InnerXml;
-            XmlNodeList versionTemp = xRadio.GetElementsByTagName("Version");
-            string version = versionTemp.Item(0).InnerXml;
-            XmlNodeList elemList = xRadio.GetElementsByTagName("LineEntry");
-            List<LineEntry> linesList = new List<LineEntry>();
-            for (int i = 0; i < elemList.Count; i++)
-            {
-                linesList.Add(new LineEntry(elemList[i].InnerXml, elemList[i].Attributes["ID"].Value));
-                
-            }
-            var linesGroups = from lineEntry in linesList group lineEntry by lineEntry.Line;
+
+            //XmlDocument xRadio = new XmlDocument();
+            //xRadio.Load(filePath);
+            //XmlNodeList guidTemp = xRadio.GetElementsByTagName("FileGUID");
+            //string guid = guidTemp.Item(0).InnerXml;
+            //XmlNodeList versionTemp = xRadio.GetElementsByTagName("Version");
+            //string version = versionTemp.Item(0).InnerXml;
+            //XmlNodeList elemList = xRadio.GetElementsByTagName("LineEntry");
+            //List<LineEntry> linesList = new List<LineEntry>();
+            //for (int i = 0; i < elemList.Count; i++)
+            //{
+            //    linesList.Add(new LineEntry(elemList[i].InnerXml, elemList[i].Attributes["ID"].Value));
+
+            //}
+            //var linesGroups = from lineEntry in linesList group lineEntry by lineEntry.Line;
 
 
-            StreamWriter file = new StreamWriter(resultFilePath);
-            file.Write("//// Localization table\n////Language: CHANGE_HERE\n[Info]\n\tguid = " + guid+"\n\tlanguage = CHANGE_HERE\n\tversion = " + version + "\n\ttranslator = PZParser\n[/Info]\n\n[Translations]\n");
-            int counterTotal = linesGroups.Count();
-            for(int i=0; i<linesGroups.Count(); i++)
+            //StreamWriter file = new StreamWriter(resultFilePath);
+            //file.Write("//// Localization table\n////Language: CHANGE_HERE\n[Info]\n\tversion = " + version + "\n\tguid = " + guid+"\n\tlanguage = CHANGE_HERE\n\ttranslator = PZParser\n[/Info]\n\n[Translations]\n");
+            //int counterTotal = linesGroups.Count();
+            //for(int i=0; i<linesGroups.Count(); i++)
+            //{
+
+            //    file.WriteLine("[Collection]");
+            //    if (translate)
+            //    {
+            //        Console.WriteLine("Translating line " + i + "/" + counterTotal);
+            //        file.WriteLine("// " + linesGroups.ElementAt(i).Key);
+            //        file.WriteLine("\ttext = " + Translate(linesGroups.ElementAt(i).Key, startLang + "-" + endLang));
+            //    }
+            //    else file.WriteLine("\ttext = " + linesGroups.ElementAt(i).Key);
+            //    foreach (var t in linesGroups.ElementAt(i))
+            //        file.WriteLine("\tmember = "+t.ID);
+            //    file.WriteLine("[/Collection]");
+            //}
+            //file.WriteLine("[/Translations]");
+            //file.Close();
+            int counter = 0;
+            string textBuffer = "";
+            string translationBuffer = "";
+            int textStartingPosition;
+            int textEndPosition;
+            string line;
+            
+            Regex regex = new Regex(@"\w*ORIGINAL\w*");
+            System.IO.StreamReader file =
+            new System.IO.StreamReader(filePath);
+            StreamWriter fileOutput = new StreamWriter(resultFilePath);
+            while ((line = file.ReadLine()) != null)
             {
-                
-                file.WriteLine("[Collection]");
-                if (translate)
+                counter++;
+                System.Console.WriteLine("Processing line number "+counter+" : "+ line);
+                MatchCollection matches = regex.Matches(line);
+                if (matches.Count > 0)
                 {
-                    Console.WriteLine("Translating line " + i + "/" + counterTotal);
-                    file.WriteLine("// " + linesGroups.ElementAt(i).Key);
-                    file.WriteLine("\ttext = " + Translate(linesGroups.ElementAt(i).Key, startLang + "-" + endLang));
+                    textBuffer = matches[0].ToString();
+                    textStartingPosition = line.IndexOf("]: ") + 3;
+                    textEndPosition = line.IndexOf("\n");
+                    textBuffer = line.Substring(textStartingPosition, line.Length - textStartingPosition);
+                    translationBuffer = Translate(textBuffer, startLang + "-" + endLang);
+                    fileOutput.WriteLine(line);
                 }
-                else file.WriteLine("\ttext = " + linesGroups.ElementAt(i).Key);
-                foreach (var t in linesGroups.ElementAt(i))
-                    file.WriteLine("\tmember = "+t.ID);
-                file.WriteLine("[/Collection]");
+                else if (Regex.IsMatch(line, @"\w*[-0-9a-fA-F]{36}\w*", RegexOptions.Compiled) && !line.Contains("guid"))
+                {
+                    fileOutput.WriteLine(line+translationBuffer);
+                }
+                else fileOutput.WriteLine(line);
+                
             }
-            file.WriteLine("[/Translations]");
+            
+            
+            fileOutput.Close();
             file.Close();
+
+
             Console.WriteLine("Finished");
         }
         
