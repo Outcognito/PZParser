@@ -130,87 +130,86 @@ namespace PZParser
 
                 }
             }
-
-            
-            string startLang = "";
-            string endLang = "";
-            Console.WriteLine("Original language: (en, ru, ja, es... etc.)");
-            startLang = Console.ReadLine();
-            Console.WriteLine("Result language: (en, ru, ja, es... etc.)");
-            endLang = Console.ReadLine();
-
-            //XmlDocument xRadio = new XmlDocument();
-            //xRadio.Load(filePath);
-            //XmlNodeList guidTemp = xRadio.GetElementsByTagName("FileGUID");
-            //string guid = guidTemp.Item(0).InnerXml;
-            //XmlNodeList versionTemp = xRadio.GetElementsByTagName("Version");
-            //string version = versionTemp.Item(0).InnerXml;
-            //XmlNodeList elemList = xRadio.GetElementsByTagName("LineEntry");
-            //List<LineEntry> linesList = new List<LineEntry>();
-            //for (int i = 0; i < elemList.Count; i++)
-            //{
-            //    linesList.Add(new LineEntry(elemList[i].InnerXml, elemList[i].Attributes["ID"].Value));
-
-            //}
-            //var linesGroups = from lineEntry in linesList group lineEntry by lineEntry.Line;
-
-
-            //StreamWriter file = new StreamWriter(resultFilePath);
-            //file.Write("//// Localization table\n////Language: CHANGE_HERE\n[Info]\n\tversion = " + version + "\n\tguid = " + guid+"\n\tlanguage = CHANGE_HERE\n\ttranslator = PZParser\n[/Info]\n\n[Translations]\n");
-            //int counterTotal = linesGroups.Count();
-            //for(int i=0; i<linesGroups.Count(); i++)
-            //{
-
-            //    file.WriteLine("[Collection]");
-            //    if (translate)
-            //    {
-            //        Console.WriteLine("Translating line " + i + "/" + counterTotal);
-            //        file.WriteLine("// " + linesGroups.ElementAt(i).Key);
-            //        file.WriteLine("\ttext = " + Translate(linesGroups.ElementAt(i).Key, startLang + "-" + endLang));
-            //    }
-            //    else file.WriteLine("\ttext = " + linesGroups.ElementAt(i).Key);
-            //    foreach (var t in linesGroups.ElementAt(i))
-            //        file.WriteLine("\tmember = "+t.ID);
-            //    file.WriteLine("[/Collection]");
-            //}
-            //file.WriteLine("[/Translations]");
-            //file.Close();
-            int counter = 0;
-            string textBuffer = "";
-            string translationBuffer = "";
-            int textStartingPosition;
-            int textEndPosition;
-            string line;
-            
-            Regex regex = new Regex(@"\w*ORIGINAL\w*");
-            System.IO.StreamReader file =
-            new System.IO.StreamReader(filePath);
-            StreamWriter fileOutput = new StreamWriter(resultFilePath);
-            while ((line = file.ReadLine()) != null)
+            string translate = "y";
+            Console.WriteLine("Apply the translation? y/n");
+            translate = Console.ReadLine();
+            if(translate == "y")
             {
-                counter++;
-                System.Console.WriteLine("Processing line number "+counter+" : "+ line);
-                MatchCollection matches = regex.Matches(line);
-                if (matches.Count > 0)
+                string startLang = "";
+                string endLang = "";
+                Console.WriteLine("Original language: (en, ru, ja, es... etc.)");
+                startLang = Console.ReadLine();
+                Console.WriteLine("Result language: (en, ru, ja, es... etc.)");
+                endLang = Console.ReadLine();
+
+                int counter = 0;
+                string textBuffer = "";
+                string translationBuffer = "";
+                int textStartingPosition;
+                int textEndPosition;
+                string line;
+
+                Regex regex = new Regex(@"\w*ORIGINAL\w*");
+                System.IO.StreamReader file =
+                new System.IO.StreamReader(filePath);
+                StreamWriter fileOutput = new StreamWriter(resultFilePath);
+                while ((line = file.ReadLine()) != null)
                 {
-                    textBuffer = matches[0].ToString();
-                    textStartingPosition = line.IndexOf("]: ") + 3;
-                    textEndPosition = line.IndexOf("\n");
-                    textBuffer = line.Substring(textStartingPosition, line.Length - textStartingPosition);
-                    translationBuffer = Translate(textBuffer, startLang + "-" + endLang);
-                    fileOutput.WriteLine(line);
+                    counter++;
+                    System.Console.WriteLine("Processing line number " + counter + " : " + line);
+                    MatchCollection matches = regex.Matches(line);
+                    if (matches.Count > 0)
+                    {
+                        textBuffer = matches[0].ToString();
+                        textStartingPosition = line.IndexOf("]: ") + 3;
+                        textEndPosition = line.IndexOf("\n");
+                        textBuffer = line.Substring(textStartingPosition, line.Length - textStartingPosition);
+                        translationBuffer = Translate(textBuffer, startLang + "-" + endLang);
+                        fileOutput.WriteLine(line);
+                    }
+                    else if (Regex.IsMatch(line, @"\w*[-0-9a-fA-F]{36}\w*", RegexOptions.Compiled) && !line.Contains("guid"))
+                    {
+                        fileOutput.WriteLine(line + translationBuffer);
+                    }
+                    else fileOutput.WriteLine(line);
+
                 }
-                else if (Regex.IsMatch(line, @"\w*[-0-9a-fA-F]{36}\w*", RegexOptions.Compiled) && !line.Contains("guid"))
-                {
-                    fileOutput.WriteLine(line+translationBuffer);
-                }
-                else fileOutput.WriteLine(line);
-                
+
+
+                fileOutput.Close();
+                file.Close();
+
             }
-            
-            
-            fileOutput.Close();
-            file.Close();
+            else
+            {
+                int counter = 0;
+                string textBuffer = "";
+                int textStartingPosition;
+                int textEndPosition;
+                string line;
+
+                Regex regex = new Regex(@"\w*ORIGINAL\w*");
+                System.IO.StreamReader file =
+                new System.IO.StreamReader(filePath);
+                StreamWriter fileOutput = new StreamWriter(resultFilePath);
+                while ((line = file.ReadLine()) != null)
+                {
+                    counter++;
+                    System.Console.WriteLine("Processing line number " + counter + " : " + line);
+                    MatchCollection matches = regex.Matches(line);
+                    if (matches.Count > 0)
+                    {
+                        textBuffer = matches[0].ToString();
+                        textStartingPosition = line.IndexOf("]: ") + 3;
+                        textEndPosition = line.IndexOf("\n");
+                        textBuffer = line.Substring(textStartingPosition, line.Length - textStartingPosition);
+                        fileOutput.WriteLine(textBuffer);
+                    }
+
+                }
+                fileOutput.Close();
+                file.Close();
+            }
 
 
             Console.WriteLine("Finished");
